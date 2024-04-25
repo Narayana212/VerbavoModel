@@ -1,0 +1,24 @@
+{
+  "name": "model-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy":"wrangler deploy --minify index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@huggingface/inference": "^2.6.7",
+    "axios": "^1.6.8",
+    "elevenlabs": "^0.3.0",
+    "hono": "^4.2.7",
+    "openai": "^4.38.3"
+  },
+  "devDependencies": {
+    "@types/stream-to-blob": "^2.0.0",
+    "wrangler": "^3.51.2"
+  }
+}
