@@ -1,0 +1,7 @@
+name = "verbavo"
+compatibility_date = "2024-04-20"
+
+[vars]
+HUGGING_FACE_API_KEY="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"
+OPENAI_API_KEY="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"
+ELEVENLABS_API_KEY="1fbe065817a5b8996155c16e34157ff3"
