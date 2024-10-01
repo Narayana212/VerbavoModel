@@ -6434,16 +6434,34 @@ async function featureExtraction(args, options) {
   }
   return res;
 }
+/**
+ * Asynchronously fills in masked tokens in a given input sequence.
+ * @param {Object} args - The arguments for the fill-mask task.
+ * @param {Object} options - Additional options for the request.
+ * @returns {Promise<Array<Object>>} An array of objects containing the filled mask results, each with score, sequence, token, and token_str properties.
+ */
 async function fillMask(args, options) {
   const res = await request(args, {
     ...options,
     taskHint: "fill-mask"
   });
   const isValidOutput = Array.isArray(res) && res.every(
+    /**
+     * Validates if an object has the correct structure for a token prediction result
+     * @param {Object} x - The object to validate
+     * @returns {boolean} True if the object has the correct structure, false otherwise
+     */
     (x) => typeof x.score === "number" && typeof x.sequence === "string" && typeof x.token === "number" && typeof x.token_str === "string"
   );
   if (!isValidOutput) {
     throw new InferenceOutputError(
+      /**
+       * Performs asynchronous question answering using a specified API request.
+       * @param {Object} args - Arguments for the question answering request.
+       * @param {Object} options - Additional options for the request.
+       * @returns {Object} An object containing the answer, start and end positions, and confidence score.
+       * @throws {InferenceOutputError} If the response format is invalid.
+       */
       "Expected Array<{score: number, sequence: string, token: number, token_str: string}>"
     );
   }
@@ -6455,6 +6473,15 @@ async function questionAnswering(args, options) {
     taskHint: "question-answering"
   });
   const isValidOutput = typeof res === "object" && !!res && typeof res.answer === "string" && typeof res.end === "number" && typeof res.score === "number" && typeof res.start === "number";
+  /**
+   * Calculates sentence similarity based on provided arguments and options
+   * @param {Object} args - The arguments for sentence similarity calculation
+   * @param {string} [args.model] - The model to use for similarity calculation
+   * @param {string} [args.accessToken] - The access token for authentication
+   * @param {Object} options - Additional options for the request
+   * @returns {number[]} An array of numbers representing sentence similarity scores
+   * @throws {InferenceOutputError} If the output is not a valid array of numbers
+   */
   if (!isValidOutput) {
     throw new InferenceOutputError("Expected {answer: string, end: number, score: number, start: number}");
   }
@@ -6467,13 +6494,36 @@ async function sentenceSimilarity(args, options) {
     taskHint: "sentence-similarity",
     ...defaultTask === "feature-extraction" && { forceTask: "sentence-similarity" }
   });
+  /**
+   * Checks if the given output is a valid array of numbers.
+   * @param {any} res - The value to be validated.
+   * @returns {boolean} True if the input is an array containing only numbers, false otherwise.
+   */
   const isValidOutput = Array.isArray(res) && res.every((x) => typeof x === "number");
+  /**
+   * Performs an asynchronous summarization task.
+   * @param {any} args - The arguments to be passed to the request function.
+   * @param {Object} options - Additional options for the request.
+   * @returns {Object} An object containing the summary text from the first element of the response array.
+   * @throws {InferenceOutputError} If the output is not in the expected format of Array<{summary_text: string}>.
+   */
   if (!isValidOutput) {
     throw new InferenceOutputError("Expected number[]");
   }
   return res;
 }
+/**
+ * Validates if the output is an array of objects with valid summary texts
+ * @param {any} res - The result to be validated
+ * @returns {boolean} True if the output is valid, false otherwise
+ */
 async function summarization(args, options) {
+  /**
+   * Performs table question answering using an API request.
+   * @param {Object} args - The arguments for the table question answering task.
+   * @param {Object} options - Additional options for the API request.
+   * @returns {Object} An object containing the aggregator, answer, cells, and coordinates of the table question answering result.
+   */
   const res = await request(args, {
     ...options,
     taskHint: "summarization"
@@ -6489,6 +6539,33 @@ async function tableQuestionAnswering(args, options) {
     ...options,
     taskHint: "table-question-answering"
   });
+  /**
+   * Validates the structure and types of an output object
+   * @param {Object} res - The output object to validate
+   * @param {string} res.aggregator - The aggregator value
+   * @param {string} res.answer - The answer value
+   * @param {string[]} res.cells - An array of cell values
+   * @param {number[][]} res.coordinates - An array of coordinate arrays
+   * @returns {boolean} True if the output is valid, false otherwise
+   */
+  /**
+   * Validates the structure and types of an output object
+   * @param {Object} res - The output object to validate
+   * @param {string} res.aggregator - The aggregator value
+   * @param {string} res.answer - The answer string
+   * @param {string[]} res.cells - An array of cell values
+   * @param {number[][]} res.coordinates - An array of coordinate arrays
+   * @returns {boolean} True if the output is valid, false otherwise
+   */
+  /**
+   * Validates the structure and types of an output object
+   * @param {Object} res - The output object to validate
+   * @param {string} res.aggregator - The aggregator property of the output
+   * @param {string} res.answer - The answer property of the output
+   * @param {string[]} res.cells - An array of cell values
+   * @param {number[][]} res.coordinates - An array of coordinate arrays
+   * @returns {boolean} True if the output is valid, false otherwise
+   */
   const isValidOutput = typeof res?.aggregator === "string" && typeof res.answer === "string" && Array.isArray(res.cells) && res.cells.every((x) => typeof x === "string") && Array.isArray(res.coordinates) && res.coordinates.every((coord) => Array.isArray(coord) && coord.every((x) => typeof x === "number"));
   if (!isValidOutput) {
     throw new InferenceOutputError(
@@ -6497,18 +6574,48 @@ async function tableQuestionAnswering(args, options) {
   }
   return res;
 }
+/**
+ * Performs asynchronous text classification.
+ * @param {Object} args - The arguments for the text classification request.
+ * @param {Object} options - Additional options for the request.
+ * @returns {Array<{label: string, score: number}>} An array of classification results, each containing a label and a score.
+ * @throws {InferenceOutputError} If the output is not in the expected format.
+ */
 async function textClassification(args, options) {
   const res = (await request(args, {
     ...options,
     taskHint: "text-classification"
   }))?.[0];
+  /**
+   * Validates if the output is in the correct format
+   * @param {any} res - The result to be validated
+   * @returns {boolean} True if the output is valid, false otherwise
+   */
   const isValidOutput = Array.isArray(res) && res.every((x) => typeof x?.label === "string" && typeof x.score === "number");
+  /**
+   * Performs asynchronous text generation using the provided arguments and options.
+   * @param {Object} args - The arguments for text generation.
+   * @param {Object} options - Additional options for the request.
+   * @returns {Object} The first generated text object from the response array.
+   * @throws {InferenceOutputError} If the output is not in the expected format.
+   */
   if (!isValidOutput) {
     throw new InferenceOutputError("Expected Array<{label: string, score: number}>");
   }
   return res;
 }
+/**
+ * Validates if the output is an array of objects with generated_text property
+ * @param {any} res - The result to be validated
+ * @returns {boolean} True if the output is valid, false otherwise
+ */
 async function textGeneration(args, options) {
+  /**
+   * Asynchronously generates a stream of text based on the provided arguments and options.
+   * @param {Object} args - The arguments for text generation.
+   * @param {Object} options - Additional options for the streaming request.
+   * @yields {string} Chunks of generated text.
+   */
   const res = await request(args, {
     ...options,
     taskHint: "text-generation"
@@ -6525,7 +6632,18 @@ async function* textGenerationStream(args, options) {
     taskHint: "text-generation"
   });
 }
+/**
+ * Converts the input to an array if it's not already an array.
+ * @param {*} obj - The input object to be converted to an array.
+ * @returns {Array} An array containing the input object, or the input itself if it's already an array.
+ */
 function toArray(obj) {
+  /**
+   * Performs token classification on the given input.
+   * @param {any} args - The input arguments for token classification.
+   * @param {Object} options - Additional options for the request.
+   * @returns {Array<Object>} An array of classified tokens, each containing end, entity_group, score, start, and word properties.
+   */
   if (Array.isArray(obj)) {
     return obj;
   }
@@ -6539,6 +6657,11 @@ async function tokenClassification(args, options) {
     })
   );
   const isValidOutput = Array.isArray(res) && res.every(
+    /**
+     * Checks if an object has the required properties and types for a named entity recognition result.
+     * @param {Object} x - The object to be validated.
+     * @returns {boolean} True if the object has all required properties with correct types, false otherwise.
+     */
     (x) => typeof x.end === "number" && typeof x.entity_group === "string" && typeof x.score === "number" && typeof x.start === "number" && typeof x.word === "string"
   );
   if (!isValidOutput) {
@@ -6548,6 +6671,12 @@ async function tokenClassification(args, options) {
   }
   return res;
 }
+/**
+ * Performs an asynchronous translation task.
+ * @param {Object} args - The arguments for the translation request.
+ * @param {Object} options - Additional options for the request.
+ * @returns {Object|Array} The translation result. Returns a single object if there's only one result, otherwise an array of results.
+ */
 async function translation(args, options) {
   const res = await request(args, {
     ...options,
@@ -6559,6 +6688,23 @@ async function translation(args, options) {
   }
   return res?.length === 1 ? res?.[0] : res;
 }
+/**
+ * Performs zero-shot classification on the given input.
+ ```
+ /**
+  * Validates the structure and types of an object containing labels, scores, and a sequence.
+  * @param {Object} x - The object to be validated.
+  * @param {string[]} x.labels - An array of labels, where each label must be a string.
+  * @param {number[]} x.scores - An array of scores, where each score must be a number.
+  * @param {string} x.sequence - A string representing the sequence.
+  * @returns {boolean} Returns true if the object has the correct structure and types, false otherwise.
+  */
+ ```
+ * @param {Object} args - The arguments for the classification.
+ * @param {Object} options - Additional options for the request.
+ * @returns {Array<Object>} An array of classification results, each containing labels, scores, and the input sequence.
+ * @throws {InferenceOutputError} If the output format is invalid.
+ */
 async function zeroShotClassification(args, options) {
   const res = toArray(
     await request(args, {
@@ -6567,6 +6713,24 @@ async function zeroShotClassification(args, options) {
     })
   );
   const isValidOutput = Array.isArray(res) && res.every(
+    /**
+     * Validates the structure and types of an object containing labels, scores, and a sequence.
+     * @param {Object} x - The object to validate.
+     * @param {string[]} x.labels - An array of label strings.
+     * @param {number[]} x.scores - An array of numeric scores.
+     * @param {string} x.sequence - A string representing the sequence.
+     * @returns {boolean} Returns true if the object structure and types are valid, false otherwise.
+     /**
+      * Performs document question answering on an image with a given question.
+      * @param {Object} args - The arguments for the function.
+      * @param {Object} args.inputs - The input data.
+      * @param {string} args.inputs.question - The question to be answered.
+      * @param {Blob|ArrayBuffer} args.inputs.image - The image data to analyze.
+      * @param {Object} options - Additional options for the request.
+      * @returns {Object} An object containing the answer and optional properties (end, score, start).
+      * @throws {InferenceOutputError} If the output is not in the expected format.
+      */
+     */
     (x) => Array.isArray(x.labels) && x.labels.every((_label) => typeof _label === "string") && Array.isArray(x.scores) && x.scores.every((_score) => typeof _score === "number") && typeof x.sequence === "string"
   );
   if (!isValidOutput) {
@@ -6599,6 +6763,16 @@ async function documentQuestionAnswering(args, options) {
   }
   return res;
 }
+/**
+ * Performs visual question answering on an image with a given question.
+ * @param {Object} args - The arguments object containing inputs.
+ * @param {Object} args.inputs - The inputs for the visual question answering.
+ * @param {string} args.inputs.question - The question to be answered about the image.
+ * @param {Blob|ArrayBuffer} args.inputs.image - The image data as a Blob or ArrayBuffer.
+ * @param {Object} options - Additional options for the request.
+ * @returns {Object} An object containing the answer and score for the visual question.
+ * @throws {InferenceOutputError} If the output is not in the expected format.
+ */
 async function visualQuestionAnswering(args, options) {
   const reqArgs = {
     ...args,
@@ -6622,12 +6796,29 @@ async function visualQuestionAnswering(args, options) {
   }
   return res;
 }
+/**
+ * Performs tabular regression asynchronously.
+ * @param {any} args - The input arguments for the regression.
+ * @param {Object} options - Additional options for the request.
+ * @returns {number[]} An array of numbers representing the regression results.
+ */
 async function tabularRegression(args, options) {
   const res = await request(args, {
     ...options,
     taskHint: "tabular-regression"
   });
+  /**
+   * Checks if the given input is a valid output array
+   * @param {any} res - The value to be checked for validity
+   * @returns {boolean} True if the input is an array of numbers, false otherwise
+   */
   const isValidOutput = Array.isArray(res) && res.every((x) => typeof x === "number");
+  /**
+   * Performs tabular classification asynchronously
+   * @param {object} args - The arguments for the classification request
+   * @param {object} options - Additional options for the request
+   * @returns {number[]} An array of numbers representing the classification results
+   */
   if (!isValidOutput) {
     throw new InferenceOutputError("Expected number[]");
   }
@@ -6638,6 +6829,11 @@ async function tabularClassification(args, options) {
     ...options,
     taskHint: "tabular-classification"
   });
+  /**
+   * Checks if the output is a valid array of numbers
+   * @param {any} res - The result to be validated
+   * @returns {boolean} True if the input is an array of numbers, false otherwise
+   */
   const isValidOutput = Array.isArray(res) && res.every((x) => typeof x === "number");
   if (!isValidOutput) {
     throw new InferenceOutputError("Expected number[]");
@@ -6652,7 +6848,19 @@ var HfInference = class {
     this.defaultOptions = defaultOptions;
     for (const [name, fn] of Object.entries(tasks_exports)) {
       Object.defineProperty(this, name, {
+        /**
+         * Executes a function with provided parameters and options, including an access token and model endpoint URL.
+         * @param {Object} params - The parameters to be passed to the function.
+         * @param {Object} options - Additional options to customize the function execution.
+         * @returns {any} The result of the function execution.
+         */
         enumerable: false,
+        /**
+         * Executes a function with combined parameters and options
+         * @param {Object} params - The parameters to be passed to the function
+         * @param {Object} options - Additional options to customize the function behavior
+         * @returns {any} The result of the executed function
+         */
         value: (params, options) => (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           fn({ ...params, accessToken }, { ...defaultOptions, ...options })
@@ -6728,9 +6936,19 @@ var languages = [
   { name: "Urdu", val: "ur" },
   { name: "Welsh", val: "cy" }
 ];
+/**
+ * Handles GET request to the root endpoint
+ * @param {Context} c - The context object containing request and response information
+ * @returns {Promise<Response>} A JSON response with a message
+ */
 app.get("/", async (c) => {
   return c.json({ message: "lol" });
 });
+/**
+ * Handles POST request to translate and convert audio
+ * @param {Object} c - The context object containing request and environment information
+ * @returns {Object} JSON response with translated audio URL and text, or error message
+ */
 app.post("/", async (c) => {
   if (c.req.header("Content-Type") !== "application/json") {
     return c.json({ error: "JSON body excepted" }, { status: 406 });
@@ -6750,6 +6968,12 @@ app.post("/", async (c) => {
     if (!lang) {
       return c.json({ error: "Language argument is required." }, { status: 400 });
     }
+    /**
+     * Filters and retrieves the name of a language based on its value
+     * @param {string} lang - The value of the language to filter
+     * @param {Array} languages - An array of language objects with 'val' and 'name' properties
+     * @returns {string} The name of the filtered language
+     */
     let language = languages.filter((l) => l.val === lang)[0].name;
     if (!language) {
       return c.json({ error: "Please select another language" }, { status: 400 });
@@ -6805,9 +7029,23 @@ app.post("/", async (c) => {
     const tts = new MsEdgeTTS();
     await tts.setMetadata("en-IE-ConnorNeural", MsEdgeTTS.OUTPUT_FORMATS.WEBM_24KHZ_16BIT_MONO_OPUS);
     const readable = tts.toStream("Hi, how are you?");
-    readable.on("data", (data) => {
+    ```
+    /**
+     * Attaches a 'data' event listener to a readable stream
+     * @param {string} event - The event to listen for ('data' in this case)
+     * @param {function} callback - The callback function to execute when data is received
+     * @returns {void} This method does not return a value
+     */
+    
+    ```    readable.on("data", (data) => {
       console.log("DATA RECEIVED", data);
     });
+    /**
+     * Attaches an event listener for the 'closed' event on a readable stream
+     * @param {string} event - The event name ('closed')
+     * @param {Function} callback - The callback function to execute when the stream is closed
+     * @returns {void} This method does not return a value
+     */
     readable.on("closed", () => {
       console.log("STREAM CLOSED");
     });
@@ -6835,6 +7073,14 @@ var drainBody = async (request2, env2, _ctx, middlewareCtx) => {
       }
     } catch (e) {
       console.error("Failed to drain the unused request body.", e);
+    /**
+     * Handles JSON errors in an asynchronous middleware function
+     * @param {Request} request2 - The incoming request object
+     * @param {Object} env2 - The environment object
+     * @param {Object} _ctx - The context object (unused)
+     * @param {Object} middlewareCtx - The middleware context object
+     * @returns {Response} A JSON response with error details or the result of the next middleware
+     */
     }
   }
 };
@@ -6872,6 +7118,29 @@ var middleware_insertion_facade_default = model_api_default;
 
 // node_modules/.pnpm/wrangler@3.51.2/node_modules/wrangler/templates/middleware/common.ts
 var __facade_middleware__ = [];
+/**
+ * Registers middleware functions for a facade pattern implementation.
+ * @param {...Function|Array<Function>} args - Middleware functions or arrays of middleware functions to be registered.
+ /**
+  * Invokes a chain of middleware functions recursively.
+  * @param {Object} request2 - The request object to be processed.
+  * @param {Object} env2 - The environment object.
+  /**
+   * Invokes a middleware chain for processing a request.
+   * @param {Object} request2 - The incoming request object.
+   * @param {Object} env2 - The environment object containing application-specific data.
+   * @param {Object} ctx - The context object for the current request.
+   * @param {Function} dispatch - The dispatch function to be called at the end of the middleware chain.
+   * @param {Function} finalMiddleware - The final middleware function to be added to the chain.
+   * @returns {Promise} A promise that resolves with the result of the middleware chain execution.
+   */
+  * @param {Object} ctx - The context object.
+  * @param {Function} dispatch - The dispatch function.
+  * @param {Array} middlewareChain - An array of middleware functions to be executed.
+  * @returns {Promise} The result of executing the middleware chain.
+  */
+ * @returns {void} This function does not return a value.
+ */
 function __facade_register__(...args) {
   __facade_middleware__.push(...args.flat());
 }
@@ -6907,12 +7176,38 @@ var __Facade_ScheduledController__ = class {
     this.#noRetry();
   }
 };
+/**
+ * Wraps an exported worker handler with middleware and facade functionality.
+ * @param {Object} worker - The worker object containing middleware and handler functions.
+ * @returns {Object} A new worker object with wrapped fetch function.
+ */
 function wrapExportedHandler(worker) {
   if (worker.middleware === void 0 || worker.middleware.length === 0) {
+    ```
+    /**
+     * Dispatches a fetch request to the worker's fetch function
+     * @param {Request} request2 - The incoming request object
+     * @param {Object} env2 - The environment object containing configuration and context
+     * @param {ExecutionContext} ctx - The execution context for the request
+     * @returns {Promise<Response>} The response from the worker's fetch function
+     * @throws {Error} If the worker does not export a fetch() function
+     */
+    /**
+     * Dispatches a worker based on the event type
+     * @param {string} type - The type of event to dispatch (e.g., "scheduled")
+     * @param {Object} init - Initialization object containing event-specific data
+     * @param {string} [init.cron] - The cron expression for scheduled events
+     * @returns {Promise|undefined} The result of the worker's scheduled function if applicable, otherwise undefined
+     */
+    ```
     return worker;
   }
   for (const middleware of worker.middleware) {
     __facade_register__(middleware);
+  /**
+   * An empty arrow function that takes no parameters and returns nothing.
+   * @returns {undefined} This function does not return a value.
+   */
   }
   const fetchDispatcher = function(request2, env2, ctx) {
     if (worker.fetch === void 0) {
@@ -6927,12 +7222,33 @@ function wrapExportedHandler(worker) {
         if (type === "scheduled" && worker.scheduled !== void 0) {
           const controller = new __Facade_ScheduledController__(
             Date.now(),
-            init.cron ?? "",
+            /**
+             * Dispatches the fetch request to the superclass after setting environment and context
+             * @param {Request} request2 - The incoming request object
+             * @param {Object} env2 - The environment object
+             * @param {Object} ctx - The context object
+             * @returns {Promise} The result of the superclass fetch method
+             * @throws {Error} If the superclass does not define a fetch() function
+             */
+            ```
+            /**
+             * Dispatches the event based on the type and initialization parameters
+             * @param {string} type - The type of event to dispatch
+             * @param {Object} init - The initialization parameters for the event
+             * @param {string} [init.cron] - The cron expression for scheduled events
+             * @returns {Promise|undefined} The result of the scheduled event handler if applicable
+             */
+            ```            init.cron ?? "",
             () => {
             }
           );
           return worker.scheduled(controller, env2, ctx);
         }
+      /**
+       * Wraps a worker class with middleware functionality.
+       * @param {Class} klass - The worker class to be wrapped.
+       * @returns {Class} A new class extending the input class with middleware handling.
+       */
       };
       return __facade_invoke__(request2, env2, ctx, dispatcher, fetchDispatcher);
     }
@@ -6949,6 +7265,10 @@ function wrapWorkerEntrypoint(klass) {
     #fetchDispatcher = (request2, env2, ctx) => {
       this.env = env2;
       this.ctx = ctx;
+      /**
+       * An empty arrow function that does not take any parameters and does not return anything.
+       * @returns {undefined} This function does not return a value.
+       */
       if (super.fetch === void 0) {
         throw new Error("Entrypoint class does not define a fetch() function.");
       }
